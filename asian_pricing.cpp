@@ -1,11 +1,11 @@
 #include<iostream>
 #include<fstream>
 #include<math.h>
-#define NEW2D(H, W, TYPE) (TYPE **)new2d(H, W, sizeof(TYPE))
 using namespace std;
 
 // Input for Asian American Barrier Pricing
-double S,X,H,t,v,r,n,k;
+double S,X,H,t,v,r;
+int n,k;
 
 // BOPM and Black-Scholes Model parameter
 double delta_t ,r_bar ,u ,d ,p;
@@ -47,10 +47,7 @@ double RunAvgAd(int cur_node, int j, int i){
 
 
 int FindFootL(double A, int j, int i){
-    int foot_l = (int) floor( (A - AvgMin(j,i))/ ((AvgMax(j,i)-AvgMin(j,i))/k ) );
-    if     (foot_l<0)  { return 0; }
-    else if(foot_l>k-1){ return k-1; }
-    else               { return foot_l; }
+    return (int) floor( (A - AvgMin(j,i))/ ((AvgMax(j,i)-AvgMin(j,i))/k ) );
 }
 double FindInterpoXu(double Au, double*** asianMTree, int j, int i, int l){
     if(asianMTree[j+1][i][l] == asianMTree[j+1][i][l+1]) return 0;
@@ -111,12 +108,28 @@ double AsianOptions(){
                 }
                 else{
                     foot_lu = FindFootL(Au, j, i);
-                    interpo_xu = FindInterpoXu(Au, asianMTree, j, i, foot_lu);
-                    Cu = InterpoCu(asianCTree, interpo_xu, foot_lu, j, i);
+                    if(foot_lu >= k){
+                        Cu = asianCTree[j+1][i][k];
+                    }
+                    else if(foot_lu <= 0){
+                        Cu = asianCTree[j+1][i][0];
+                    }
+                    else{
+                        interpo_xu = FindInterpoXu(Au, asianMTree, j, i, foot_lu);
+                        Cu = InterpoCu(asianCTree, interpo_xu, foot_lu, j, i);
+                    }
 
                     foot_ld = FindFootL(Ad, j, i);
-                    interpo_xd = FindInterpoXd(Ad, asianMTree, j, i, foot_ld);
-                    Cd = InterpoCd(asianCTree, interpo_xd, foot_ld, j, i);
+                    if(foot_ld >= k){
+                        Cd = asianCTree[j+1][i+1][k];
+                    }
+                    else if(foot_ld <= 0){
+                        Cd = asianCTree[j+1][i+1][0];
+                    }
+                    else{
+                        interpo_xd = FindInterpoXd(Ad, asianMTree, j, i, foot_ld);
+                        Cd = InterpoCd(asianCTree, interpo_xd, foot_ld, j, i);
+                    }
                 }
 
                 asianC = (p*Cu + (1-p)*Cd)/exp(r_bar);
@@ -131,7 +144,7 @@ double AsianOptions(){
                     asianCTree[j][i][m] = asianC;
                 }
             }
-            cout<<asianCTree[j][i][3]<<" ";
+            cout<<asianCTree[j][i][0]<<" ";
         }
         cout<<endl;
     }
@@ -142,6 +155,7 @@ double AsianOptions(){
 int main(){
     ifstream fin("test.txt");
     fin>>S>>X>>H>>t>>v>>r>>n>>k;
+    k = k-1;
 
     cout<<AsianOptions()<<endl;
 
