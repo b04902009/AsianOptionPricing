@@ -50,20 +50,16 @@ int FindFootL(double A, int j, int i){
     return (int) floor( (A - AvgMin(j,i))/ ((AvgMax(j,i)-AvgMin(j,i))/k ) );
 }
 double FindInterpoXu(double Au, double*** asianMTree, int j, int i, int l){
-    if(asianMTree[j+1][i][l] == asianMTree[j+1][i][l+1]) return 0;
-
-    double x = (Au - asianMTree[j+1][i][l+1])/(asianMTree[j+1][i][l] - asianMTree[j+1][i][l+1]);
-    if     (x>1){ return 1; }
-    else if(x<0){ return 0; }
-    else        { return x; }
+    if(asianMTree[j+1][i][l] == asianMTree[j+1][i][l+1])
+        return 0;
+    else
+        return (Au - asianMTree[j+1][i][l+1])/(asianMTree[j+1][i][l] - asianMTree[j+1][i][l+1]);
 }
 double FindInterpoXd(double Ad, double*** asianMTree, int j, int i, int l){
-    if(asianMTree[j+1][i+1][l] == asianMTree[j+1][i+1][l+1]) return 0;
-
-    double x = (Ad - asianMTree[j+1][i+1][l+1])/(asianMTree[j+1][i+1][l] - asianMTree[j+1][i+1][l+1]);
-    if     (x>1){ return 1; }
-    else if(x<0){ return 0; }
-    else        { return x; }
+    if(asianMTree[j+1][i+1][l] == asianMTree[j+1][i+1][l+1])
+        return 0;
+    else
+        return (Ad - asianMTree[j+1][i+1][l+1])/(asianMTree[j+1][i+1][l] - asianMTree[j+1][i+1][l+1]);
 }
 double InterpoCu(double*** asianCTree, double x, int l, int j, int i){
      return x*asianCTree[j+1][i][l] + (1-x)*asianCTree[j+1][i][l+1];
@@ -92,13 +88,12 @@ double AsianOptions(){
         }
     }
 
-    double Au, Ad, interpo_xu, interpo_xd, Cu, Cd, asianC, americanC;
-    int foot_lu, foot_ld;
+    //americanC = S*pow(u,j-i)*pow(d,i) - X;
+
+    double Au, Ad, interpo_xu=0, interpo_xd=0, Cu, Cd, asianC, americanC;
+    int foot_lu=0, foot_ld=0;
     for(int j=node_num-1; j>=0; j--){
         for(int i=0; i<=j; i++){
-
-            americanC = S*pow(u,j-i)*pow(d,i) - X;
-
             for(int m=0; m<=k; m++){
                 Au = RunAvgAu(asianMTree[j][i][m], j, i);
                 Ad = RunAvgAd(asianMTree[j][i][m], j, i);
@@ -107,26 +102,30 @@ double AsianOptions(){
                     Cd = fmax(Ad - X, 0);
                 }
                 else{
-                    foot_lu = FindFootL(Au, j, i);
-                    if(foot_lu >= k){
+                    if(Au > AvgMax(j,i)){
+                        foot_lu = k;
                         Cu = asianCTree[j+1][i][k];
                     }
-                    else if(foot_lu <= 0){
+                    else if(Au < AvgMin(j,i)){
+                        foot_lu = 0;
                         Cu = asianCTree[j+1][i][0];
                     }
                     else{
+                        foot_lu = FindFootL(Au, j, i);
                         interpo_xu = FindInterpoXu(Au, asianMTree, j, i, foot_lu);
                         Cu = InterpoCu(asianCTree, interpo_xu, foot_lu, j, i);
                     }
 
-                    foot_ld = FindFootL(Ad, j, i);
-                    if(foot_ld >= k){
+                    if(Ad > AvgMax(j,i)){
+                        foot_ld = k;
                         Cd = asianCTree[j+1][i+1][k];
                     }
-                    else if(foot_ld <= 0){
+                    else if(Ad < AvgMin(j,i)){
+                        foot_ld = 0;
                         Cd = asianCTree[j+1][i+1][0];
                     }
                     else{
+                        foot_ld = FindFootL(Ad, j, i);
                         interpo_xd = FindInterpoXd(Ad, asianMTree, j, i, foot_ld);
                         Cd = InterpoCd(asianCTree, interpo_xd, foot_ld, j, i);
                     }
@@ -137,16 +136,16 @@ double AsianOptions(){
                 if(americanC + X > H){
                     asianCTree[j][i][m] = 0;
                 }
-                else if(americanC > asianC){
-                    asianCTree[j][i][m] = americanC;
-                }
                 else{
                     asianCTree[j][i][m] = asianC;
                 }
             }
-            cout<<asianCTree[j][i][0]<<" ";
+            cout<<Au<<" "<<foot_lu<<" "<<interpo_xu<<" "<<Cu<<endl;
+            //cout<<asianCTree[j][i][0]<<endl;
         }
-        cout<<endl;
+        int temp;
+        cin>>temp;
+        cout<<"**********"<<endl;
     }
 
     return asianCTree[0][0][0];
