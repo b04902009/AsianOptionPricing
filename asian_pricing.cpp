@@ -93,12 +93,12 @@ double AsianOptions(){
         }
     }
 
-    //americanC = S*pow(u,j-i)*pow(d,i) - X;
 
     double Au, Ad, interpo_xu=0, interpo_xd=0, Cu, Cd, asianC, americanC;
     int foot_lu=0, foot_ld=0;
     for(int j=node_num-1; j>=0; j--){
         for(int i=0; i<=j; i++){
+            americanC = S*pow(u,j-i)*pow(d,i) - X;
             for(int m=0; m<=k; m++){
                 Au = RunAvgAu(asianMTree[j][i][m], j, i);
                 Ad = RunAvgAd(asianMTree[j][i][m], j, i);
@@ -138,12 +138,14 @@ double AsianOptions(){
 
                 asianC = (p*Cu + (1-p)*Cd)/exp(r_bar);
 
-                //if(americanC + X > H){
-                //    asianCTree[j][i][m] = 0;
-                //}
-                //else{
-                asianCTree[j][i][m] = asianC;
-                //}
+
+
+                if(asianMTree[j][i][m] >= H){
+                    asianCTree[j][i][m] = 0;
+                }
+                else{
+                    asianCTree[j][i][m] = asianC;
+                }
                 //if(j==node_num-2 && m==0){
                     //cout<<"###j==node_num-2###"<<endl;
                     //cout<<"Au:"<<Au<<", l:"<<foot_lu<<", x:"<<interpo_xu<<", Cu:"<<Cu<<endl;
