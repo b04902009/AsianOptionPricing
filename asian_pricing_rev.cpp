@@ -82,10 +82,20 @@ double AsianOptions(){
     double ***CTree = Create3DArray(node_num, node_num, k+1);
 
     for(int j=0; j<node_num; j++){
-        for(int i=0; i<node_num; i++){
+        for(int i=0; i<=j; i++){
+            //if(j==1 && i==1){
+                //cout<<(1 - pow(u,j-i+1)) / (1-u)<<endl;
+                //cout<<pow(u,j-i)*d*((1-pow(d,i))/(1-d))<<endl;
+                //cout<< AvgMin(1,1)<<endl;
+                //cout<< AvgMax(1,1)<<endl;
+                //cout<<asianMTree[1][1][0]<<endl;
+                //cout<<"$$$$$$$$"<<endl;
+            //}
             for(int m=0; m<=k; m++){
                 asianMTree[j][i][m] = InterpoStates(j, i, m);
             }
+            //if(j==node_num-2)
+            //cout<<"*****"<<endl;
         }
     }
 
@@ -104,37 +114,37 @@ double AsianOptions(){
                 }
                 else{
                     //if(Au >= AvgMax(j,i)){
-                    if(Au > AvgMax(j,i) || (Au-AvgMax(j,i))<0.0001 || (AvgMax(j,i)-Au)<0.0001){
+                    if(Au > AvgMax(j+1,i) || (AvgMax(j+1,i)-Au)< 0.0001 ){
                         foot_lu = k;
                         Cu = CTree[j+1][i][k];
                     }
-                    else if(Au < AvgMin(j,i)){
+                    else if(Au < AvgMin(j+1,i)){
                         foot_lu = 0;
                         Cu = CTree[j+1][i][0];
                     }
                     else{
-                        foot_lu = FindFootL(Au, j, i);
+                        foot_lu = FindFootL(Au, j+1, i);
                         interpo_xu = FindInterpoXu(Au, asianMTree, j, i, foot_lu);
                         Cu = InterpoCu(CTree, interpo_xu, j, i, foot_lu);
                     }
 
                     //if(Ad > AvgMax(j,i)){
-                    if(Ad > AvgMax(j,i) || (Ad-AvgMax(j,i))<0.0001 || (AvgMax(j,i)-Ad)<0.0001){
+                    if(Ad > AvgMax(j+1,i+1) || (AvgMax(j+1,i+1)-Au)<0.0001){
                         foot_ld = k;
                         Cd = CTree[j+1][i+1][k];
                     }
-                    else if(Ad < AvgMin(j,i)){
+                    else if(Ad < AvgMin(j+1,i+1)){
                         foot_ld = 0;
                         Cd = CTree[j+1][i+1][0];
                     }
                     else{
-                        foot_ld = FindFootL(Ad, j, i);
+                        foot_ld = FindFootL(Ad, j+1, i+1);
                         interpo_xd = FindInterpoXd(Ad, asianMTree, j, i, foot_ld);
                         Cd = InterpoCd(CTree, interpo_xd, j, i, foot_ld);
                     }
                 }
 
-                asianC = (p*Cu + (1-p)*Cd)/exp(r_bar);
+                asianC = asianMTree[j][i][m] < H?(p*Cu + (1-p)*Cd)/exp(r_bar):0;
 
                 //if(asianMTree[j][i][m] >= H){
                 //    CTree[j][i][m] = 0;
